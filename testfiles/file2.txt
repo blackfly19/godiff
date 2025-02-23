@@ -1,0 +1,9 @@
+This is a file.
+
+It is used for comparison.
+
+This line makes this file different.
+
+Let's see if my code can handle it.
+
+Test Case: Bufio reader
