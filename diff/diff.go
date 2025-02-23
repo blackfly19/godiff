@@ -1,4 +1,4 @@
-package godiff
+package diff
 
 import (
 	"bufio"

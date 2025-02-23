@@ -1,4 +1,4 @@
-package godiff
+package diff
 
 const prime = 65521
 
