@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	COPY = '0'
-	ADD  = '1'
+	copy = '0'
+	add  = '1'
 )
 
 func Encode(patchFileName string, originalFileName string, updatedFileName string, blockSize int) {
@@ -55,7 +55,7 @@ func Encode(patchFileName string, originalFileName string, updatedFileName strin
 			j := startingPos
 
 			if unmatchedChar > 0 {
-				_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", ADD, bytes.ReplaceAll(updatedFile[i-unmatchedChar-1:i], []byte("\n"), []byte("\\n")))))
+				_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[i-unmatchedChar-1:i], []byte("\n"), []byte("\\n")))))
 				if err != nil {
 					log.Fatal("Unable to write patch file.", err.Error())
 				}
@@ -65,7 +65,7 @@ func Encode(patchFileName string, originalFileName string, updatedFileName strin
 			for ; i < len(updatedFile) && j < len(originalFile) && originalFile[j] == updatedFile[i]; j++ {
 				i++
 			}
-			_, err := patchFile.Write([]byte(fmt.Sprintf("%c%d%d%d\n", COPY, len(strconv.Itoa(startingPos)), startingPos, j-startingPos)))
+			_, err := patchFile.Write([]byte(fmt.Sprintf("%c%d%d%d\n", copy, len(strconv.Itoa(startingPos)), startingPos, j-startingPos)))
 			if err != nil {
 				log.Fatal("Unable to write patch file.", err.Error())
 			}
@@ -75,7 +75,7 @@ func Encode(patchFileName string, originalFileName string, updatedFileName strin
 	}
 
 	if unmatchedChar > 0 {
-		_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", ADD, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar-1:], []byte("\n"), []byte("\\n")))))
+		_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar-1:], []byte("\n"), []byte("\\n")))))
 		if err != nil {
 			log.Fatal("Unable to write patch file.", err.Error())
 		}
@@ -99,7 +99,7 @@ func Decode(originalFileName string, patchFileName string) []byte {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if rune(line[0]) == COPY {
+		if rune(line[0]) == copy {
 			numDigits, err := strconv.Atoi(string(line[1]))
 			if err != nil {
 			}
