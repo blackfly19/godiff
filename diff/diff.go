@@ -1,12 +1,12 @@
 package diff
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 	add  = '1'
 )
 
-func Encode(patchFileName string, originalFileName string, updatedFileName string, blockSize int) {
+func Encode(patchFileName string, originalFile []byte, updatedFile []byte, blockSize int) {
 
 	if patchFileName == "" {
 		patchFileName = "default.patch"
@@ -30,16 +30,6 @@ func Encode(patchFileName string, originalFileName string, updatedFileName strin
 			log.Fatal("Unable to close patch file.", err.Error())
 		}
 	}(patchFile)
-
-	originalFile, err := os.ReadFile(originalFileName)
-	if err != nil {
-		log.Fatal("Unable to read original file.", err.Error())
-	}
-
-	updatedFile, err := os.ReadFile(updatedFileName)
-	if err != nil {
-		log.Fatal("Unable to read updated file.", err.Error())
-	}
 
 	var unmatchedChar = 0
 	var rh = 0
@@ -88,22 +78,12 @@ func Encode(patchFileName string, originalFileName string, updatedFileName strin
 	}
 }
 
-func Decode(originalFileName string, patchFileName string) []byte {
-
-	originalFile, err := os.ReadFile(originalFileName)
-	if err != nil {
-		log.Fatal("Unable to read original file.", err.Error())
-	}
-
-	patchFile, err := os.Open(patchFileName)
-	if err != nil {
-		log.Fatal("Unable to open patch file.", err.Error())
-	}
+func Decode(originalFile []byte, patchFile []byte) []byte {
 
 	var updatedFile []byte
-	scanner := bufio.NewScanner(patchFile)
-	for scanner.Scan() {
-		line := scanner.Text()
+
+	lines := strings.Split(string(patchFile), "\n")
+	for _, line := range lines {
 
 		if rune(line[0]) == copy {
 			numDigits, err := strconv.Atoi(string(line[1]))
