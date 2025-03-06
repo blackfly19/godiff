@@ -1,9 +1,32 @@
 package diff
 
 import (
+	"io"
+	"log"
 	"os"
 	"testing"
 )
+
+func fileOpenErrorHandler(fileName string) []byte {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatalf("Error opening file %s. %e", fileName, err)
+	}
+
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatalf("Error when closing the file %s. %e", fileName, err)
+		}
+	}(file)
+
+	filebytes, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Error reading file %s. %e", fileName, err)
+	}
+
+	return filebytes
+}
 
 func TestEncode(t *testing.T) {
 	var f1 = "../testfiles/file1.txt"
@@ -11,7 +34,7 @@ func TestEncode(t *testing.T) {
 	var patchFile = "../testfiles/test1.patch"
 	var requiredResult = "01045\n1This line makes this file different\n024238\n1\\n\\nTest Case: Bufio reader\n"
 
-	Encode(patchFile, f1, f2, 8)
+	Encode(patchFile, fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
 
 	actualResult, err := os.ReadFile(patchFile)
 	if err != nil {
@@ -32,7 +55,7 @@ func TestEncodeOpposite(t *testing.T) {
 	var patchFile = "../testfiles/test2.patch"
 	var requiredResult = "01045\n028335\n"
 
-	Encode(patchFile, f1, f2, 8)
+	Encode(patchFile, fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
 
 	actualResult, err := os.ReadFile(patchFile)
 	if err != nil {
@@ -57,7 +80,7 @@ func TestDecode(t *testing.T) {
 		t.Error(err)
 	}
 
-	actualResult := Decode(f1, patchFile)
+	actualResult := Decode(fileOpenErrorHandler(f1), fileOpenErrorHandler(patchFile))
 
 	if string(actualResult) != string(requiredResult) {
 		t.Error("Actual result does not match required result. Actual result: ", string(actualResult), "Required result: ", string(requiredResult))
@@ -76,7 +99,7 @@ func TestDecodeOpposite(t *testing.T) {
 		t.Error(err)
 	}
 
-	actualResult := Decode(f1, patchFile)
+	actualResult := Decode(fileOpenErrorHandler(f1), fileOpenErrorHandler(patchFile))
 
 	if string(actualResult) != string(requiredResult) {
 		t.Error("Actual result does not match required result. Actual result: ", string(actualResult), "Required result: ", string(requiredResult))

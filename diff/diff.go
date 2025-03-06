@@ -85,22 +85,27 @@ func Decode(originalFile []byte, patchFile []byte) []byte {
 	lines := strings.Split(string(patchFile), "\n")
 	for _, line := range lines {
 
-		if rune(line[0]) == copy {
-			numDigits, err := strconv.Atoi(string(line[1]))
-			if err != nil {
-			}
+		if len(line) > 0 {
+			if rune(line[0]) == copy {
+				numDigits, err := strconv.Atoi(string(line[1]))
+				if err != nil {
+					log.Fatal("Unable to parse numeric value.", err.Error())
+				}
 
-			startingPos, err := strconv.Atoi(line[2 : 2+numDigits])
-			if err != nil {
-			}
-			numChars, err := strconv.Atoi(line[2+numDigits:])
-			if err != nil {
-			}
+				startingPos, err := strconv.Atoi(line[2 : 2+numDigits])
+				if err != nil {
+					log.Fatal("Unable to parse numeric value.", err.Error())
+				}
+				numChars, err := strconv.Atoi(line[2+numDigits:])
+				if err != nil {
+					log.Fatal("Unable to parse numeric value.", err.Error())
+				}
 
-			updatedFile = append(updatedFile, originalFile[startingPos:startingPos+numChars]...)
+				updatedFile = append(updatedFile, originalFile[startingPos:startingPos+numChars]...)
 
-		} else {
-			updatedFile = append(updatedFile, line[1:]...)
+			} else {
+				updatedFile = append(updatedFile, line[1:]...)
+			}
 		}
 	}
 
