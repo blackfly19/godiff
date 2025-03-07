@@ -31,15 +31,9 @@ func fileOpenErrorHandler(fileName string) []byte {
 func TestEncode(t *testing.T) {
 	var f1 = "../testfiles/file1.txt"
 	var f2 = "../testfiles/file2.txt"
-	var patchFile = "../testfiles/test1.patch"
 	var requiredResult = "01045\n1This line makes this file different\n024238\n1\\n\\nTest Case: Bufio reader\n"
 
-	Encode(patchFile, fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
-
-	actualResult, err := os.ReadFile(patchFile)
-	if err != nil {
-		t.Error(err)
-	}
+	actualResult := Encode(fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
 
 	if string(actualResult) != requiredResult {
 		t.Error("Actual result does not match required result. Actual result: ", string(actualResult), "Required result: ", requiredResult)
@@ -52,16 +46,10 @@ func TestEncode(t *testing.T) {
 func TestEncodeOpposite(t *testing.T) {
 	var f1 = "../testfiles/file2.txt"
 	var f2 = "../testfiles/file1.txt"
-	var patchFile = "../testfiles/test2.patch"
 	var requiredResult = "01045\n028335\n"
 
-	Encode(patchFile, fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
-
-	actualResult, err := os.ReadFile(patchFile)
-	if err != nil {
-		t.Error(err)
-	}
-
+	actualResult := Encode(fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
+	
 	if string(actualResult) != requiredResult {
 		t.Error("Actual result does not match required result. Actual result: ", string(actualResult), "Required result: ", requiredResult)
 	} else {

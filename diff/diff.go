@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -14,26 +13,12 @@ const (
 	add  = '1'
 )
 
-func Encode(patchFileName string, originalFile []byte, updatedFile []byte, blockSize int) {
-
-	if patchFileName == "" {
-		patchFileName = "default.patch"
-	}
-
-	patchFile, err := os.OpenFile(patchFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatal("Unable to create patch file.", err.Error())
-	}
-	defer func(patchFile *os.File) {
-		err := patchFile.Close()
-		if err != nil {
-			log.Fatal("Unable to close patch file.", err.Error())
-		}
-	}(patchFile)
+func Encode(originalFile []byte, updatedFile []byte, blockSize int) []byte {
 
 	var unmatchedChar = 0
 	var rh = 0
 	var hashmap = make(map[int]int)
+	var patchFile bytes.Buffer
 
 	for i := 0; i < len(originalFile); i++ {
 		hashmap[adler32(originalFile[i:i+blockSize])] = i
@@ -45,7 +30,7 @@ func Encode(patchFileName string, originalFile []byte, updatedFile []byte, block
 			j := startingPos
 
 			if unmatchedChar > 0 {
-				_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[i-unmatchedChar:i], []byte("\n"), []byte("\\n")))))
+				_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[i-unmatchedChar:i], []byte("\n"), []byte("\\n")))))
 				if err != nil {
 					log.Fatal("Unable to write patch file.", err.Error())
 				}
@@ -71,11 +56,13 @@ func Encode(patchFileName string, originalFile []byte, updatedFile []byte, block
 	}
 
 	if unmatchedChar > 0 {
-		_, err = patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar:], []byte("\n"), []byte("\\n")))))
+		_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar:], []byte("\n"), []byte("\\n")))))
 		if err != nil {
 			log.Fatal("Unable to write patch file.", err.Error())
 		}
 	}
+
+	return patchFile.Bytes()
 }
 
 func Decode(originalFile []byte, patchFile []byte) []byte {
