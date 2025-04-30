@@ -1,31 +1,19 @@
 package diff
 
 import (
-	"io"
 	"log"
 	"os"
 	"testing"
 )
 
 func fileOpenErrorHandler(fileName string) []byte {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatalf("Error opening file %s. %e", fileName, err)
-	}
 
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Fatalf("Error when closing the file %s. %e", fileName, err)
-		}
-	}(file)
-
-	filebytes, err := io.ReadAll(file)
+	filebytes, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatalf("Error reading file %s. %e", fileName, err)
 	}
 
-	return filebytes
+	return filebytes[:len(filebytes):len(filebytes)]
 }
 
 func TestEncode(t *testing.T) {
@@ -49,7 +37,7 @@ func TestEncodeOpposite(t *testing.T) {
 	var requiredResult = "01045\n028335\n"
 
 	actualResult := Encode(fileOpenErrorHandler(f1), fileOpenErrorHandler(f2), 8)
-	
+
 	if string(actualResult) != requiredResult {
 		t.Error("Actual result does not match required result. Actual result: ", string(actualResult), "Required result: ", requiredResult)
 	} else {

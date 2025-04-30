@@ -20,11 +20,11 @@ func Encode(originalFile []byte, updatedFile []byte, blockSize int) []byte {
 	var hashmap = make(map[int]int)
 	var patchFile bytes.Buffer
 
-	for i := 0; i < len(originalFile); i++ {
+	for i := 0; i < len(originalFile)-blockSize; i++ {
 		hashmap[adler32(originalFile[i:i+blockSize])] = i
 	}
 
-	for i := 0; i < len(updatedFile); {
+	for i := 0; i < len(updatedFile)-blockSize; {
 		rh := rollingHash(updatedFile[i:i+blockSize], blockSize, i, rh)
 		if startingPos, exists := hashmap[rh]; exists {
 			j := startingPos
@@ -56,7 +56,7 @@ func Encode(originalFile []byte, updatedFile []byte, blockSize int) []byte {
 	}
 
 	if unmatchedChar > 0 {
-		_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar:], []byte("\n"), []byte("\\n")))))
+		_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar-blockSize:], []byte("\n"), []byte("\\n")))))
 		if err != nil {
 			log.Fatal("Unable to write patch file.", err.Error())
 		}
