@@ -24,26 +24,31 @@ func Encode(originalFile []byte, updatedFile []byte, blockSize int) []byte {
 		hashmap[adler32(originalFile[i:i+blockSize])] = i
 	}
 
-	for i := 0; i < len(updatedFile)-blockSize; {
-		rh := rollingHash(updatedFile[i:i+blockSize], blockSize, i, rh)
-		if startingPos, exists := hashmap[rh]; exists {
-			j := startingPos
+	for i := 0; i < len(updatedFile); {
+		if i+blockSize < len(updatedFile) {
+			rh := rollingHash(updatedFile[i:i+blockSize], blockSize, i, rh)
+			if startingPos, exists := hashmap[rh]; exists {
+				j := startingPos
 
-			if unmatchedChar > 0 {
-				_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[i-unmatchedChar:i], []byte("\n"), []byte("\\n")))))
-				if err != nil {
-					log.Fatal("Unable to write patch file.", err.Error())
+				if unmatchedChar > 0 {
+					_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[i-unmatchedChar:i], []byte("\n"), []byte("\\n")))))
+					if err != nil {
+						log.Fatal("Unable to write patch file.", err.Error())
+					}
+					unmatchedChar = 0
 				}
-				unmatchedChar = 0
-			}
 
-			for ; i < len(updatedFile) && j < len(originalFile) && originalFile[j] == updatedFile[i]; i, j = i+1, j+1 {
-			}
+				for ; i < len(updatedFile) && j < len(originalFile) && originalFile[j] == updatedFile[i]; i, j = i+1, j+1 {
+				}
 
-			if j != startingPos {
-				_, err := patchFile.Write([]byte(fmt.Sprintf("%c%d%d%d\n", copy, len(strconv.Itoa(startingPos)), startingPos, j-startingPos)))
-				if err != nil {
-					log.Fatal("Unable to write patch file.", err.Error())
+				if j != startingPos {
+					_, err := patchFile.Write([]byte(fmt.Sprintf("%c%d%d%d\n", copy, len(strconv.Itoa(startingPos)), startingPos, j-startingPos)))
+					if err != nil {
+						log.Fatal("Unable to write patch file.", err.Error())
+					}
+				} else {
+					unmatchedChar++
+					i++
 				}
 			} else {
 				unmatchedChar++
@@ -56,7 +61,7 @@ func Encode(originalFile []byte, updatedFile []byte, blockSize int) []byte {
 	}
 
 	if unmatchedChar > 0 {
-		_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar-blockSize:], []byte("\n"), []byte("\\n")))))
+		_, err := patchFile.Write([]byte(fmt.Sprintf("%c%s\n", add, bytes.ReplaceAll(updatedFile[len(updatedFile)-unmatchedChar:], []byte("\n"), []byte("\\n")))))
 		if err != nil {
 			log.Fatal("Unable to write patch file.", err.Error())
 		}
